@@ -43,6 +43,9 @@ cat > $REMOTE_DIR/.env.deploy <<EOF
 ECR_REGISTRY=$ECR_REGISTRY
 AWS_REGION=ap-south-1
 SSM_PREFIX=/garbo/prod
+# Uncomment when you have a domain (see docs/HTTPS_SETUP.md):
+# GARBO_DOMAIN=garbo.yourname.com
+# ACME_EMAIL=you@gmail.com
 EOF
 REMOTE
 

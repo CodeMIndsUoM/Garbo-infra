@@ -10,6 +10,10 @@ on:
       - main
     paths:
       - '.github/workflows/deploy-full-stack.yml'
+      - 'compose/**'
+      - 'scripts/deploy.sh'
+      - 'scripts/fetch-ssm-env.sh'
+      - 'scripts/sync-infra-via-ssm.sh'
 
 env:
   AWS_REGION: ap-south-1
@@ -80,6 +84,11 @@ jobs:
             ./Garbo_web_dashboard
           docker push "$ECR_REGISTRY/garbo-frontend:$IMAGE_TAG"
           docker push "$ECR_REGISTRY/garbo-frontend:latest"
+
+      - name: Sync infra files to EC2
+        run: |
+          chmod +x ./scripts/sync-infra-via-ssm.sh
+          ./scripts/sync-infra-via-ssm.sh
 
       - name: Deploy to EC2 via SSM
         run: |

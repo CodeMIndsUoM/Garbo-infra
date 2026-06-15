@@ -69,4 +69,17 @@ Add the same AWS + EC2 secrets to `Garbo_backend` and `Garbo_web_dashboard` if y
 
 ## JWT secret
 
-Add later in SSM: `/garbo/prod/jwt-secret`. Login will fail until then.
+Set a strong value in SSM (at least 32 characters for HS256):
+
+```bash
+aws ssm put-parameter \
+  --profile garbo \
+  --region ap-south-1 \
+  --name /garbo/prod/jwt-secret \
+  --type SecureString \
+  --overwrite \
+  --value "$(openssl rand -base64 48)"
+```
+
+`fetch-ssm-env.sh` writes `JWT_SECRET` into `.env.prod` when the parameter is not `REPLACE_ME_AFTER_APPLY`.
+Backend reads it via `jwt.secret` in `application.yml`. Redeploy backend after changing the secret (all users must log in again).

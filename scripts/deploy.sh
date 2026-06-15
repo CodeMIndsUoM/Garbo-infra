@@ -13,6 +13,17 @@ FRONTEND_TAG="${FRONTEND_TAG:-latest}"
 
 export ECR_REGISTRY BACKEND_TAG FRONTEND_TAG
 
+COMPOSE_BASE="$COMPOSE_DIR/docker-compose.prod.yml"
+COMPOSE_ARGS=(-f "$COMPOSE_BASE")
+
+if [[ -n "${GARBO_DOMAIN:-}" && -n "${ACME_EMAIL:-}" ]]; then
+  export GARBO_DOMAIN ACME_EMAIL
+  COMPOSE_ARGS+=(-f "$COMPOSE_DIR/docker-compose.https.yml")
+  echo "==> HTTPS enabled for https://${GARBO_DOMAIN}"
+else
+  echo "==> HTTP only (set GARBO_DOMAIN + ACME_EMAIL in .env.deploy for HTTPS — see docs/HTTPS_SETUP.md)"
+fi
+
 echo "==> ECR login"
 aws ecr get-login-password --region "$REGION" \
   | docker login --username AWS --password-stdin "$ECR_REGISTRY"
@@ -21,10 +32,10 @@ echo "==> Fetch secrets from SSM"
 ./scripts/fetch-ssm-env.sh "$COMPOSE_DIR/.env.prod"
 
 echo "==> Pull images (backend:$BACKEND_TAG frontend:$FRONTEND_TAG)"
-docker compose -f "$COMPOSE_DIR/docker-compose.prod.yml" pull
+docker compose "${COMPOSE_ARGS[@]}" pull
 
 echo "==> Start stack"
-docker compose -f "$COMPOSE_DIR/docker-compose.prod.yml" up -d --remove-orphans
+docker compose "${COMPOSE_ARGS[@]}" up -d --remove-orphans
 
 echo "==> Wait for backend health"
 for i in $(seq 1 30); do
@@ -35,5 +46,9 @@ for i in $(seq 1 30); do
   sleep 5
 done
 
-docker compose -f "$COMPOSE_DIR/docker-compose.prod.yml" ps
-echo "Deploy complete. App: http://$(curl -s http://checkip.amazonaws.com 2>/dev/null || hostname -I | awk '{print $1}')/"
+docker compose "${COMPOSE_ARGS[@]}" ps
+if [[ -n "${GARBO_DOMAIN:-}" ]]; then
+  echo "Deploy complete. App: https://${GARBO_DOMAIN}/"
+else
+  echo "Deploy complete. App: http://$(curl -s http://checkip.amazonaws.com 2>/dev/null || hostname -I | awk '{print $1}')/"
+fi

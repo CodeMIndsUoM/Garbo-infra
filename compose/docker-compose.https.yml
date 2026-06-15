@@ -1,0 +1,51 @@
+# HTTPS overlay for production — use WITH docker-compose.prod.yml
+# Requires GARBO_DOMAIN and ACME_EMAIL in /opt/garbo/.env.deploy
+#
+# IP-based HTTP routing from docker-compose.prod.yml still works during migration.
+
+services:
+  traefik:
+    ports:
+      - "443:443"
+    command:
+      - --api.dashboard=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-letsencrypt:/letsencrypt
+    labels:
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.redirect-to-https.redirectscheme.permanent=true
+
+  backend:
+    labels:
+      - traefik.http.routers.garbo-backend-https.rule=Host(`${GARBO_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/ws`) || PathPrefix(`/ws-stomp`) || PathPrefix(`/actuator`))
+      - traefik.http.routers.garbo-backend-https.entrypoints=websecure
+      - traefik.http.routers.garbo-backend-https.tls=true
+      - traefik.http.routers.garbo-backend-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.garbo-backend-https.priority=110
+      - traefik.http.routers.garbo-backend-domain-http.rule=Host(`${GARBO_DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/ws`) || PathPrefix(`/ws-stomp`) || PathPrefix(`/actuator`))
+      - traefik.http.routers.garbo-backend-domain-http.entrypoints=web
+      - traefik.http.routers.garbo-backend-domain-http.middlewares=redirect-to-https
+      - traefik.http.routers.garbo-backend-domain-http.priority=105
+
+  frontend:
+    labels:
+      - traefik.http.routers.garbo-frontend-https.rule=Host(`${GARBO_DOMAIN}`)
+      - traefik.http.routers.garbo-frontend-https.entrypoints=websecure
+      - traefik.http.routers.garbo-frontend-https.tls=true
+      - traefik.http.routers.garbo-frontend-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.garbo-frontend-https.priority=11
+      - traefik.http.routers.garbo-frontend-domain-http.rule=Host(`${GARBO_DOMAIN}`)
+      - traefik.http.routers.garbo-frontend-domain-http.entrypoints=web
+      - traefik.http.routers.garbo-frontend-domain-http.middlewares=redirect-to-https
+      - traefik.http.routers.garbo-frontend-domain-http.priority=10
+
+volumes:
+  traefik-letsencrypt:

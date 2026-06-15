@@ -1,5 +1,5 @@
 # Production stack for EC2 — images from ECR, secrets from SSM (via .env.prod)
-# Traefik on port 80 routes by path (no domain required yet).
+# Traefik on port 80 routes by path. Optional HTTPS: see docker-compose.https.yml + docs/HTTPS_SETUP.md
 
 services:
   backend:
