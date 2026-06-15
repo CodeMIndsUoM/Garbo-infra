@@ -5,18 +5,22 @@ Provisions a **new** Garbo app server on AWS Free Tier. Does not touch your curr
 ## What gets created
 
 - VPC + public subnet + security group (SSH locked to your IP, 80/443 open)
-- EC2 `t3.micro` with Docker pre-installed
+- EC2 with Docker pre-installed + **Elastic IP** (stable public IP after stop/start)
 - ECR repos: `garbo-backend`, `garbo-frontend`
 - SSM Parameter Store placeholders for secrets
 - CloudWatch log groups + CPU alarm
 
 ## Prerequisites
 
-Already verified on your machine:
-
-- AWS CLI configured (`aws sts get-caller-identity` works)
+- **Separate IAM user** `garbo-devops` — do NOT use your earlier project's IAM user. See `docs/AWS_ISOLATION_SETUP.md`.
+- AWS CLI profile: `aws configure --profile garbo`
+- New EC2 key pair: `garbo-deploy-key` (download `.pem` to `~/.ssh/`)
 - Terraform installed
-- An existing EC2 key pair in the same region
+
+```bash
+export AWS_PROFILE=garbo
+aws sts get-caller-identity   # must show garbo-devops, not datastrom_model
+```
 
 ## One-time setup
 

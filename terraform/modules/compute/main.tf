@@ -117,3 +117,17 @@ resource "aws_instance" "app" {
     Name = "${var.project_name}-app"
   })
 }
+
+# Stable public IP — survives stop/start (update DuckDNS once after first apply).
+resource "aws_eip" "app" {
+  domain = "vpc"
+
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-eip"
+  })
+}
+
+resource "aws_eip_association" "app" {
+  allocation_id = aws_eip.app.id
+  instance_id   = aws_instance.app.id
+}
