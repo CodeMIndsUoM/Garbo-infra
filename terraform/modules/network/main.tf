@@ -47,7 +47,7 @@ resource "aws_route_table_association" "public" {
 
 resource "aws_security_group" "app" {
   name        = "${var.project_name}-app-sg"
-  description = "Garbo app server — HTTP/HTTPS public, SSH restricted, app ports private"
+  description = "Garbo app server - HTTP/HTTPS public, SSH restricted, app ports private"
   vpc_id      = aws_vpc.this.id
 
   ingress {
