@@ -1,0 +1,68 @@
+services:
+  backend:
+    build:
+      context: ../../Garbo_backend
+      dockerfile: Dockerfile
+    env_file:
+      - ${BACKEND_ENV_FILE:-../../Garbo_backend/.env}
+    environment:
+      SERVER_PORT: "8081"
+    expose:
+      - "8081"
+    ports:
+      - "8081:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 768m
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.garbo-backend.rule=Host(`api.garbo.localhost`)
+      - traefik.http.routers.garbo-backend.entrypoints=web
+      - traefik.http.services.garbo-backend.loadbalancer.server.port=8081
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ../../Garbo_web_dashboard
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://localhost:8081}
+    environment:
+      NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://localhost:8081}
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.garbo-frontend.rule=Host(`app.garbo.localhost`)
+      - traefik.http.routers.garbo-frontend.entrypoints=web
+      - traefik.http.services.garbo-frontend.loadbalancer.server.port=3000
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:v3.3
+    command:
+      - --api.dashboard=false
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: unless-stopped
