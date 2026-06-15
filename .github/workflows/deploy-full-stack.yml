@@ -81,7 +81,7 @@ jobs:
 
       - name: Deploy to EC2 via SSM
         run: |
-          DEPLOY_SCRIPT="cd /opt/garbo && set -a && source .env.deploy && set +a && BACKEND_TAG=run-${{ github.run_number }} FRONTEND_TAG=run-${{ github.run_number }} ./scripts/deploy.sh"
+          DEPLOY_SCRIPT="bash -lc 'cd /opt/garbo && set -a && source .env.deploy && set +a && BACKEND_TAG=run-${{ github.run_number }} FRONTEND_TAG=run-${{ github.run_number }} ./scripts/deploy.sh'"
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$EC2_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \

@@ -49,7 +49,7 @@ services:
     restart: unless-stopped
 
   traefik:
-    image: traefik:v3.3
+    image: traefik:v3.6
     command:
       - --api.dashboard=false
       - --providers.docker=true
