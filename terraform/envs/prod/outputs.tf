@@ -20,6 +20,11 @@ output "ssm_parameter_prefix" {
   value = module.secrets.ssm_parameter_prefix
 }
 
+output "ec2_instance_id" {
+  description = "EC2 instance ID for SSM deploy"
+  value       = module.compute.instance_id
+}
+
 output "ssh_command" {
   value = "ssh -i ~/.ssh/<your-key>.pem ubuntu@${module.compute.public_ip}"
 }
