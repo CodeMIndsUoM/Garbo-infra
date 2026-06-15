@@ -1,0 +1,90 @@
+name: Deploy Full Stack
+
+# Builds backend + frontend on linux/amd64 (GitHub runners) and deploys to EC2.
+# No manual docker build needed on your Mac.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/deploy-full-stack.yml'
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REGISTRY: 392202704441.dkr.ecr.ap-south-1.amazonaws.com
+  BACKEND_REPO: CodeMIndsUoM/Garbo_backend
+  FRONTEND_REPO: CodeMIndsUoM/Garbo_web_dashboard
+  DEPLOY_BRANCH: devops/platform
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Garbo-infra
+        uses: actions/checkout@v4
+
+      - name: Checkout backend
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.BACKEND_REPO }}
+          ref: ${{ env.DEPLOY_BRANCH }}
+          path: Garbo_backend
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Checkout frontend
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.FRONTEND_REPO }}
+          ref: ${{ env.DEPLOY_BRANCH }}
+          path: Garbo_web_dashboard
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set image tag
+        run: echo "IMAGE_TAG=run-${{ github.run_number }}" >> "$GITHUB_ENV"
+
+      - name: Build and push backend
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            -t "$ECR_REGISTRY/garbo-backend:$IMAGE_TAG" \
+            -t "$ECR_REGISTRY/garbo-backend:latest" \
+            ./Garbo_backend
+          docker push "$ECR_REGISTRY/garbo-backend:$IMAGE_TAG"
+          docker push "$ECR_REGISTRY/garbo-backend:latest"
+
+      - name: Build and push frontend
+        env:
+          NEXT_PUBLIC_API_BASE: ${{ secrets.NEXT_PUBLIC_API_BASE }}
+        run: |
+          docker build \
+            --platform linux/amd64 \
+            --build-arg NEXT_PUBLIC_API_BASE="${NEXT_PUBLIC_API_BASE}" \
+            -t "$ECR_REGISTRY/garbo-frontend:$IMAGE_TAG" \
+            -t "$ECR_REGISTRY/garbo-frontend:latest" \
+            ./Garbo_web_dashboard
+          docker push "$ECR_REGISTRY/garbo-frontend:$IMAGE_TAG"
+          docker push "$ECR_REGISTRY/garbo-frontend:latest"
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/garbo
+            set -a && source .env.deploy && set +a
+            BACKEND_TAG=run-${{ github.run_number }} FRONTEND_TAG=run-${{ github.run_number }} ./scripts/deploy.sh
