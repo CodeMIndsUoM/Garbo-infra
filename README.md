@@ -30,9 +30,10 @@ This repo holds infrastructure-as-code, Docker Compose stacks, deployment script
 
 ```bash
 cd compose
-cp .env.example .env   # adjust paths if your repos are elsewhere
 docker compose -f docker-compose.local.yml up --build
 ```
+
+**Note:** `Garbo_backend/.env` has both local (`SPRING_DATASOURCE_URL=localhost`) and Neon (`PROD_SPRING_DATASOURCE_*`) values. The backend container maps `PROD_*` → `SPRING_DATASOURCE_*` at startup so Docker uses Neon automatically.
 
 ### URLs
 
