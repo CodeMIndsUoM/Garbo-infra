@@ -19,7 +19,7 @@ GitHub → **CodeMIndsUoM/Garbo-infra** → **Settings → Secrets and variables
 | `AWS_SECRET_ACCESS_KEY` | `garbo-devops` secret key |
 | `EC2_HOST` | `13.233.77.40` |
 | `EC2_SSH_PRIVATE_KEY` | Full contents of `~/.ssh/garbo-deploy-ke.pem` |
-| `NEXT_PUBLIC_API_BASE` | `http://13.233.77.40` (no `/api` suffix — the app adds `/api/...` paths) |
+| `NEXT_PUBLIC_API_BASE` | `https://garboadmin.duckdns.org` (no `/api` suffix — the app adds `/api/...` paths) |
 | `GH_PAT` | GitHub Personal Access Token (see below) |
 
 ### Create `GH_PAT` (for checkout private app repos)

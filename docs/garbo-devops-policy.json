@@ -2,10 +2,9 @@
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "GarboTerraform",
+      "Sid": "GarboIAM",
       "Effect": "Allow",
       "Action": [
-        "ec2:*",
         "iam:CreateRole",
         "iam:DeleteRole",
         "iam:GetRole",
@@ -24,7 +23,15 @@
         "iam:RemoveRoleFromInstanceProfile",
         "iam:ListInstanceProfilesForRole",
         "iam:TagRole",
-        "iam:TagInstanceProfile",
+        "iam:TagInstanceProfile"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "GarboRegional",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:*",
         "ecr:*",
         "ssm:*",
         "logs:*",

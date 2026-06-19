@@ -47,5 +47,17 @@ services:
       - traefik.http.routers.garbo-frontend-domain-http.middlewares=redirect-to-https
       - traefik.http.routers.garbo-frontend-domain-http.priority=10
 
+  grafana:
+    labels:
+      - traefik.http.routers.garbo-grafana-https.rule=Host(`${GARBO_DOMAIN}`) && PathPrefix(`/grafana`)
+      - traefik.http.routers.garbo-grafana-https.entrypoints=websecure
+      - traefik.http.routers.garbo-grafana-https.tls=true
+      - traefik.http.routers.garbo-grafana-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.garbo-grafana-https.priority=110
+      - traefik.http.routers.garbo-grafana-domain-http.rule=Host(`${GARBO_DOMAIN}`) && PathPrefix(`/grafana`)
+      - traefik.http.routers.garbo-grafana-domain-http.entrypoints=web
+      - traefik.http.routers.garbo-grafana-domain-http.middlewares=redirect-to-https
+      - traefik.http.routers.garbo-grafana-domain-http.priority=105
+
 volumes:
   traefik-letsencrypt:

@@ -14,8 +14,9 @@ variable "environment" {
 }
 
 variable "instance_type" {
-  type    = string
-  default = "t3.micro"
+  type        = string
+  default     = "t3.medium"
+  description = "t3.medium (4GB) minimum for OR-Tools; t3.large (8GB) recommended."
 }
 
 variable "key_name" {
