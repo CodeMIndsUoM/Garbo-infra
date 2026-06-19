@@ -76,9 +76,12 @@ jobs:
         run: |
           API_BASE="${NEXT_PUBLIC_API_BASE%/api}"
           API_BASE="${API_BASE%/}"
+          # Fetch Sentry DSN from AWS SSM dynamically
+          SENTRY_DSN_VAL=$(aws ssm get-parameter --name "/garbo/prod/next-public-sentry-dsn" --with-decryption --query "Parameter.Value" --output text --region ap-south-1 || echo "")
           docker build \
             --platform linux/amd64 \
             --build-arg NEXT_PUBLIC_API_BASE="${API_BASE}" \
+            --build-arg NEXT_PUBLIC_SENTRY_DSN="${SENTRY_DSN_VAL}" \
             -t "$ECR_REGISTRY/garbo-frontend:$IMAGE_TAG" \
             -t "$ECR_REGISTRY/garbo-frontend:latest" \
             ./Garbo_web_dashboard

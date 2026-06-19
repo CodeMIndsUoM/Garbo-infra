@@ -74,8 +74,9 @@ services:
   grafana:
     image: grafana/grafana:10.4.1
     container_name: garbo-grafana
+    env_file:
+      - .env.prod
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin_change_me}
       - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
     volumes:

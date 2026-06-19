@@ -25,6 +25,8 @@ get_param() {
   echo "CLOUDINARY_CLOUD_NAME=$(get_param cloudinary-cloud-name)"
   echo "CLOUDINARY_API_KEY=$(get_param cloudinary-api-key)"
   echo "CLOUDINARY_API_SECRET=$(get_param cloudinary-api-secret)"
+  echo "GF_SECURITY_ADMIN_PASSWORD=$(get_param grafana-admin-password)"
+  echo "SENTRY_DSN=$(get_param sentry-dsn)"
   if jwt=$(get_param jwt-secret 2>/dev/null) && [[ "$jwt" != "REPLACE_ME_AFTER_APPLY" ]]; then
     echo "JWT_SECRET=$jwt"
   fi
